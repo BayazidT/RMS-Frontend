@@ -44,7 +44,6 @@ export default function ReservationsTableView() {
       const data = await getReservations({
         page: currentPage,
         size: pageSize,
-        // You can add status/search/sort params later when backend supports them
       });
       setPageData(data);
     } catch (err) {
