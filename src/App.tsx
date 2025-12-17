@@ -90,14 +90,14 @@ export default function App() {
           <Route index element={<RootRedirect />} />
 
           {/* Dashboard Pages */}
-          <Route
+          {/* <Route
             path="orders"
             element={
               <Suspense fallback={<PageLoading />}>
                 <OrdersPage />
               </Suspense>
             }
-          />
+          /> */}
           <Route
             path="reservations"
             element={
