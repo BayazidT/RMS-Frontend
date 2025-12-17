@@ -3,7 +3,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
   Calendar, Clock, Users, Phone, Mail, Trash2,
-  ChevronDown, ChevronUp, Search
+  ChevronDown, ChevronUp, Search,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 
 import {
@@ -11,41 +12,57 @@ import {
   updateReservationStatus,
   deleteReservation
 } from '@/api/reservationApi';
-import type { Reservation } from '@/types/reservation.types';
+import { RESERVATION_STATUSES, RESERVATION_STATUS_LABELS } from '@/types/reservation.types';
+import type { Reservation, ReservationPage, ReservationStatus} from '@/types/reservation.types';
 import Card from '@/components/ui/Card';
 
 type SortKey = 'reservationDate' | 'reservationTime' | 'customerName' | 'tableNumber' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 export default function ReservationsTableView() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [pageData, setPageData] = useState<ReservationPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 2; // Match your backend default
+
+  // Client-side sorting (optional – you can move to server later)
   const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
+  // Fetch data whenever page, search, or filter changes
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [currentPage]);
 
   const fetchReservations = async () => {
     try {
-      const data = await getReservations();
-      setReservations(data);
+      setLoading(true);
+      const data = await getReservations({
+        page: currentPage,
+        size: pageSize,
+        // You can add status/search/sort params later when backend supports them
+      });
+      setPageData(data);
     } catch (err) {
+      console.error('Failed to load reservations', err);
       alert('Failed to load reservations');
+      setPageData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
+  // After status update or delete, refresh current page
+  const handleStatusChange = async (id: string, status: ReservationStatus) => {
     try {
-      await updateReservationStatus(id, status as any);
+      await updateReservationStatus(id, status);
       fetchReservations();
     } catch (err) {
-      alert('Failed to update');
+      alert('Failed to update status');
     }
   };
 
@@ -59,15 +76,18 @@ export default function ReservationsTableView() {
     }
   };
 
-  // Filtering & Sorting
-  const filteredAndSorted = useMemo(() => {
+  const reservations = pageData?.content || [];
+
+  // Client-side filtering (search + status)
+  const filteredReservations = useMemo(() => {
     let filtered = reservations;
 
     if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
       filtered = filtered.filter(r =>
-        r.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.customerName.toLowerCase().includes(lower) ||
         r.customerPhone.includes(searchTerm) ||
-        r.customerEmail.toLowerCase().includes(searchTerm.toLowerCase())
+        r.customerEmail.toLowerCase().includes(lower)
       );
     }
 
@@ -75,7 +95,12 @@ export default function ReservationsTableView() {
       filtered = filtered.filter(r => r.status === statusFilter);
     }
 
-    return filtered.sort((a, b) => {
+    return filtered;
+  }, [reservations, searchTerm, statusFilter]);
+
+  // Client-side sorting
+  const filteredAndSorted = useMemo(() => {
+    return [...filteredReservations].sort((a, b) => {
       let aVal: any = a[sortKey];
       let bVal: any = b[sortKey];
 
@@ -88,7 +113,7 @@ export default function ReservationsTableView() {
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [reservations, searchTerm, statusFilter, sortKey, sortOrder]);
+  }, [filteredReservations, sortKey, sortOrder]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -99,7 +124,7 @@ export default function ReservationsTableView() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
       case 'PENDING':    return 'bg-yellow-100 text-yellow-800';
       case 'CONFIRMED':  return 'bg-green-100 text-green-800';
@@ -113,6 +138,9 @@ export default function ReservationsTableView() {
   if (loading) {
     return <div className="p-12 text-center text-gray-600">Loading reservations...</div>;
   }
+
+  const totalPages = pageData?.totalPages || 1;
+  const totalElements = pageData?.totalElements || 0;
 
   return (
     <div className="space-y-6">
@@ -163,12 +191,14 @@ export default function ReservationsTableView() {
                   <th
                     key={col.key}
                     onClick={() => handleSort(col.key as SortKey)}
-                    className="text-left px-6 py-4 font-semibold text-sky-800 cursor-pointer hover:bg-sky-100 transition"
+                    className="text-left px-6 py-4 font-semibold text-sky-800 cursor-pointer hover:bg-sky-100 transition select-none"
                   >
                     <div className="flex items-center gap-2">
                       {col.label}
                       {sortKey === col.key && (
-                        sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                        sortOrder === 'asc' 
+                          ? <ChevronUp className="w-4 h-4" /> 
+                          : <ChevronDown className="w-4 h-4" />
                       )}
                     </div>
                   </th>
@@ -217,17 +247,17 @@ export default function ReservationsTableView() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <select
-                        value={res.status}
-                        onChange={(e) => handleStatusChange(res.id, e.target.value)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(res.status)} border-0`}
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="CONFIRMED">Confirmed</option>
-                        <option value="SEATED">Seated</option>
-                        <option value="CANCELLED">Cancelled</option>
-                        <option value="NO_SHOW">No Show</option>
-                      </select>
+                    <select
+  value={res.status}
+  onChange={(e) => handleStatusChange(res.id, e.target.value as ReservationStatus)}
+  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(res.status)} border-0 cursor-pointer`}
+>
+  {RESERVATION_STATUSES.map((status) => (
+    <option key={status} value={status}>
+      {RESERVATION_STATUS_LABELS[status]}
+    </option>
+  ))}
+</select>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <button
@@ -243,6 +273,53 @@ export default function ReservationsTableView() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t gap-4">
+            <p className="text-sm text-gray-600">
+              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(0)}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsLeft className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="px-4 py-2 text-sm font-medium">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

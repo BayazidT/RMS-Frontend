@@ -3,7 +3,6 @@ import { Calendar, Package, Users, Utensils, UserCog, Home, LogOut } from 'lucid
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
-  { to: '/orders', label: 'Orders', icon: Package },
   { to: '/reservations', label: 'Reservations', icon: Calendar },
   { to: '/menu', label: 'Menu', icon: Utensils },
   { to: '/employees', label: 'Employees', icon: UserCog },

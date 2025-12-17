@@ -1,74 +1,63 @@
-// src/app/routes/reservations/ReservationsPage.tsx
-import { useState, useEffect } from 'react';
+// src/app/routes/reservations/ReservationsTableView.tsx
+import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
-  Calendar, Clock, Users, Phone, Mail,
-  Trash2, Plus, AlertCircle
+  Calendar, Clock, Users, Phone, Mail, Trash2,
+  ChevronDown, ChevronUp, Search,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 
 import {
   getReservations,
-  createReservation,
   updateReservationStatus,
   deleteReservation
 } from '@/api/reservationApi';
-import type { Reservation, CreateReservationRequest } from '@/types/reservation.types';
+import { RESERVATION_STATUSES, RESERVATION_STATUS_LABELS } from '@/types/reservation.types';
+import type { Reservation, ReservationPage, ReservationStatus} from '@/types/reservation.types';
 import Card from '@/components/ui/Card';
 
-export default function ReservationsPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<CreateReservationRequest>({
-    reservationDate: '',
-        reservationTime: '',
-        guestCount: 2,
-        tableNumber: 1,
-        customerName: '',
-        status:'PENDING',
-        customerPhone: '',
-        customerEmail: '',
-        specialRequests: '',
-  });
+type SortKey = 'reservationDate' | 'reservationTime' | 'customerName' | 'tableNumber' | 'status';
+type SortOrder = 'asc' | 'desc';
 
+export default function ReservationsTableView() {
+  const [pageData, setPageData] = useState<ReservationPage | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 2; // Match your backend default
+
+  // Client-side sorting (optional – you can move to server later)
+  const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  // Fetch data whenever page, search, or filter changes
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [currentPage]);
 
   const fetchReservations = async () => {
     try {
-      const data = await getReservations();
-      setReservations(data);
+      setLoading(true);
+      const data = await getReservations({
+        page: currentPage,
+        size: pageSize,
+        // You can add status/search/sort params later when backend supports them
+      });
+      setPageData(data);
     } catch (err) {
+      console.error('Failed to load reservations', err);
       alert('Failed to load reservations');
+      setPageData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createReservation(formData);
-      setShowForm(false);
-      setFormData({
-        reservationDate: '',
-        reservationTime: '',
-        guestCount: 2,
-        tableNumber: 1,
-        customerName: '',
-        status:'PENDING',
-        customerPhone: '',
-        customerEmail: '',
-        specialRequests: '',
-      });
-      fetchReservations();
-    } catch (err) {
-      alert('Failed to create reservation');
-    }
-  };
-
-  const handleStatusChange = async (id: string, status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'SEATED' | 'NO_SHOW') => {
+  // After status update or delete, refresh current page
+  const handleStatusChange = async (id: string, status: ReservationStatus) => {
     try {
       await updateReservationStatus(id, status);
       fetchReservations();
@@ -87,7 +76,55 @@ export default function ReservationsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const reservations = pageData?.content || [];
+
+  // Client-side filtering (search + status)
+  const filteredReservations = useMemo(() => {
+    let filtered = reservations;
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.customerName.toLowerCase().includes(lower) ||
+        r.customerPhone.includes(searchTerm) ||
+        r.customerEmail.toLowerCase().includes(lower)
+      );
+    }
+
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(r => r.status === statusFilter);
+    }
+
+    return filtered;
+  }, [reservations, searchTerm, statusFilter]);
+
+  // Client-side sorting
+  const filteredAndSorted = useMemo(() => {
+    return [...filteredReservations].sort((a, b) => {
+      let aVal: any = a[sortKey];
+      let bVal: any = b[sortKey];
+
+      if (sortKey === 'reservationDate') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredReservations, sortKey, sortOrder]);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
+  const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
       case 'PENDING':    return 'bg-yellow-100 text-yellow-800';
       case 'CONFIRMED':  return 'bg-green-100 text-green-800';
@@ -99,135 +136,191 @@ export default function ReservationsPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-600">Loading reservations...</div>;
+    return <div className="p-12 text-center text-gray-600">Loading reservations...</div>;
   }
 
+  const totalPages = pageData?.totalPages || 1;
+  const totalElements = pageData?.totalElements || 0;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-gray-900">Reservations - Table View</h1>
 
-      {/* Header + New Button */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Reservations</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 transition shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          New Reservation
-        </button>
-      </div>
+      {/* Filters */}
+      <Card className="p-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name, phone, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-6 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+          >
+            <option value="ALL">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="SEATED">Seated</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="NO_SHOW">No Show</option>
+          </select>
+        </div>
+      </Card>
 
-      {/* Create Form */}
-      {showForm && (
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Create New Reservation</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <input type="date" required value={formData.reservationDate} onChange={e => setFormData({ ...formData, reservationDate: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" />
-            <input type="time" required value={formData.reservationTime} onChange={e => setFormData({ ...formData, reservationTime: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" />
-            <input type="number" min="1" required placeholder="Number of Guests" value={formData.guestCount} onChange={e => setFormData({ ...formData, guestCount: +e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" />
-            <input type="number" min="1" required placeholder="Table Number" value={formData.tableNumber} onChange={e => setFormData({ ...formData, tableNumber: +e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" />
-            <input type="text" required placeholder="Customer Name" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" />
-            <input type="tel" required placeholder="Phone" value={formData.customerPhone} onChange={e => setFormData({ ...formData, customerPhone: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" />
-            <input type="email" required placeholder="Email" value={formData.customerEmail} onChange={e => setFormData({ ...formData, customerEmail: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none" />
-            <input type="text" placeholder="Special Requests (optional)" value={formData.specialRequests} onChange={e => setFormData({ ...formData, specialRequests: e.target.value })} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none md:col-span-2" />
+      {/* Table */}
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-sky-50 border-b-2 border-sky-200">
+              <tr>
+                {[
+                  { key: 'customerName', label: 'Customer' },
+                  { key: 'reservationDate', label: 'Date' },
+                  { key: 'reservationTime', label: 'Time' },
+                  { key: 'tableNumber', label: 'Table' },
+                  { key: 'guestCount', label: 'Guests' },
+                  { key: 'status', label: 'Status' },
+                ].map(col => (
+                  <th
+                    key={col.key}
+                    onClick={() => handleSort(col.key as SortKey)}
+                    className="text-left px-6 py-4 font-semibold text-sky-800 cursor-pointer hover:bg-sky-100 transition select-none"
+                  >
+                    <div className="flex items-center gap-2">
+                      {col.label}
+                      {sortKey === col.key && (
+                        sortOrder === 'asc' 
+                          ? <ChevronUp className="w-4 h-4" /> 
+                          : <ChevronDown className="w-4 h-4" />
+                      )}
+                    </div>
+                  </th>
+                ))}
+                <th className="px-6 py-4 text-right font-semibold text-sky-800">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAndSorted.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-gray-500">
+                    No reservations found
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSorted.map((res) => (
+                  <tr key={res.id} className="border-b hover:bg-sky-50 transition">
+                    <td className="px-6 py-5">
+                      <div>
+                        <p className="font-medium text-gray-900">{res.customerName}</p>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {res.customerPhone}
+                        </p>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> {res.customerEmail}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-sky-600" />
+                        {format(new Date(res.reservationDate), 'dd MMM yyyy')}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-sky-600" />
+                        {res.reservationTime.slice(0, 5)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 font-bold text-sky-700">Table {res.tableNumber}</td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-sky-600" />
+                        {res.guestCount}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                    <select
+  value={res.status}
+  onChange={(e) => handleStatusChange(res.id, e.target.value as ReservationStatus)}
+  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(res.status)} border-0 cursor-pointer`}
+>
+  {RESERVATION_STATUSES.map((status) => (
+    <option key={status} value={status}>
+      {RESERVATION_STATUS_LABELS[status]}
+    </option>
+  ))}
+</select>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <button
+                        onClick={() => handleDelete(res.id)}
+                        className="text-red-600 hover:bg-red-50 p-3 rounded-lg transition"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-            <div className="md:col-span-2 flex gap-4">
-              <button type="submit" className="bg-sky-600 text-white px-8 py-3 rounded-lg hover:bg-sky-700 transition font-medium">
-                Create Reservation
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t gap-4">
+            <p className="text-sm text-gray-600">
+              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(0)}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsLeft className="w-5 h-5" />
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg hover:bg-gray-300 transition">
-                Cancel
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="px-4 py-2 text-sm font-medium">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsRight className="w-5 h-5" />
               </button>
             </div>
-          </form>
-        </Card>
-      )}
-
-      
-
-
-      {/* Reservations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {reservations.length === 0 ? (
-          <p className="col-span-full text-center text-gray-500 py-16 text-lg">No reservations found</p>
-        ) : (
-          reservations.map((res) => (
-            <Card key={res.id} className="overflow-hidden">
-              {/* Card Header - Sky Blue */}
-              <div className="bg-sky-600 text-white p-5">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold">{res.customerName}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(res.status)}`}>
-                    {res.status.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-sky-600" />
-                    <span className="font-medium">{format(new Date(res.reservationDate), 'dd MMM yyyy')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-sky-600" />
-                    <span>{res.reservationTime.slice(0, 5)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-sky-600" />
-                    <span>{res.guestCount} guests</span>
-                  </div>
-                  <div className="text-lg font-bold text-sky-700">
-                    Table {res.tableNumber}
-                  </div>
-                </div>
-
-                <div className="border-t pt-4 space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-500" />
-                    <span>{res.customerPhone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    <span>{res.customerEmail}</span>
-                  </div>
-                </div>
-
-                {res.specialRequests && (
-                  <div className="bg-sky-50 border border-sky-200 p-4 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-sky-600 mt-0.5" />
-                      <p className="text-sm text-gray-700">{res.specialRequests}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <select
-                    value={res.status}
-                    onChange={(e) => handleStatusChange(res.id, e.target.value as any)}
-                    className="text-sm border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-500 outline-none"
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="SEATED">Seated</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    <option value="NO_SHOW">No Show</option>
-                  </select>
-
-                  <button
-                    onClick={() => handleDelete(res.id)}
-                    className="text-red-600 hover:bg-red-50 p-3 rounded-lg transition"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </Card>
-          ))
+          </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
