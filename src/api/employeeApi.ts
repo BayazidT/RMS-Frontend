@@ -1,10 +1,18 @@
 // src/api/reservationApi.ts
 import api from './axiosInstance';
 
-import type { Employee, EmployeeRequest } from '@/types/employee.types';
+interface GetEmployeeParams {
+  page?: number;
+  size?: number;
+  // status?: string;
+}
 
-export const getEmployees = async (): Promise<Employee[]> => {
-  const res = await api.get('/v1/private/users');
+import type { EmployeePage, EmployeeRequest, Employee } from '@/types/employee.types';
+
+export const getEmployees = async (
+  params: GetEmployeeParams = {}
+): Promise<EmployeePage> => {
+  const res = await api.get<EmployeePage>('/v1/private/users', {params});
   return res.data;
 };
 
@@ -12,3 +20,8 @@ export const createEmployee = async (data: EmployeeRequest): Promise<Employee> =
   const res = await api.post('/v1/private/users', data);
   return res.data;
 };
+
+export const deleteEmployee = async (id: string):Promise<string> => {
+  const res = await api.delete<string>(`/v1/private/users/${id}`)
+  return res.data;
+}

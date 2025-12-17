@@ -8,6 +8,17 @@ export interface Employee {
   email: string; 
 }
 
+export interface EmployeePage {
+  content: Employee[];
+  totalElements: number;
+  totalPages: number;
+  pageNumber: number;
+  pageSize: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number; 
+}
+
 export interface EmployeeRequest {
   username: string;
   name: string;
