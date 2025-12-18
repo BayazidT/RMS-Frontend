@@ -1,12 +1,13 @@
 // src/app/routes/employees/EmployeesPage.tsx
 import { useState, useEffect } from 'react';
-import { Mail, User, Plus, Trash2 } from 'lucide-react';
+import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
 import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 4; // Match your backend default
+    const pageSize = 2; // Match your backend default
   
   const [pageData, setPageData] = useState<EmployeePage>();
   // const [employees, setEmployees] = useState<Employee[]>();
@@ -39,6 +40,8 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   };
+  const totalPages = pageData?.totalPages || 1;
+  const totalElements = pageData?.totalElements || 0;
   const employees = pageData?.content || [];
   var id_prefix="KAK000"
   var random_number=1;
@@ -205,6 +208,51 @@ export default function EmployeesPage() {
                   </tbody>
                 </table>
               </div>
+              {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t gap-4">
+            <p className="text-sm text-gray-600">
+              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(0)}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsLeft className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="px-4 py-2 text-sm font-medium">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
       
       {/* Employees List */}
       {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
