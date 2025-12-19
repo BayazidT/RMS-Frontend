@@ -1,12 +1,15 @@
 // src/app/routes/employees/EmployeesPage.tsx
 import { useState, useEffect } from 'react';
-import { Mail, User, Plus, Trash2 } from 'lucide-react';
+import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
+  Car} from 'lucide-react';
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
 import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
+import Card from '@/components/ui/Card';
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 4; // Match your backend default
+    const pageSize = 2; // Match your backend default
   
   const [pageData, setPageData] = useState<EmployeePage>();
   // const [employees, setEmployees] = useState<Employee[]>();
@@ -39,6 +42,8 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   };
+  const totalPages = pageData?.totalPages || 1;
+  const totalElements = pageData?.totalElements || 0;
   const employees = pageData?.content || [];
   var id_prefix="KAK000"
   var random_number=1;
@@ -140,8 +145,8 @@ export default function EmployeesPage() {
           </form>
         </div>
       )}
-       {/* Table */}
-            
+       {/* Table */}       
+       <Card>     
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-sky-50 border-b-2 border-sky-200">
@@ -205,39 +210,52 @@ export default function EmployeesPage() {
                   </tbody>
                 </table>
               </div>
-      
-      {/* Employees List */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {employees.length === 0 ? (
-          <p className="text-gray-500 col-span-full text-center py-12">
-            No employees registered yet
-          </p>
-        ) : (
-          employees.map((employee) => (
-            <div
-              key={employee.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
-            >
-              <div className="bg-amber-600 text-white p-4">
-                <h3 className="text-lg font-semibold">{employee.name}</h3>
-              </div>
+              {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
+            <p className="text-sm text-gray-600">
+              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+            </p>
 
-              <div className="p-6 space-y-4">
-                <div className="border-t pt-4 space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span>{employee.username}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    <span>{employee.email || '—'}</span>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(0)}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsLeft className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={pageData?.first || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="px-4 py-2 text-sm font-medium">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={pageData?.last || loading}
+                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsRight className="w-5 h-5" />
+              </button>
             </div>
-          ))
+          </div>
         )}
-      </div> */}
+        </Card>
     </div>
   );
 }
