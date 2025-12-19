@@ -1,9 +1,11 @@
 // src/app/routes/employees/EmployeesPage.tsx
 import { useState, useEffect } from 'react';
 import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
+  Car} from 'lucide-react';
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
 import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
+import Card from '@/components/ui/Card';
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -143,8 +145,8 @@ export default function EmployeesPage() {
           </form>
         </div>
       )}
-       {/* Table */}
-            
+       {/* Table */}       
+       <Card>     
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-sky-50 border-b-2 border-sky-200">
@@ -209,7 +211,7 @@ export default function EmployeesPage() {
                 </table>
               </div>
               {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
             <p className="text-sm text-gray-600">
               Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
             </p>
@@ -253,39 +255,7 @@ export default function EmployeesPage() {
             </div>
           </div>
         )}
-      
-      {/* Employees List */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {employees.length === 0 ? (
-          <p className="text-gray-500 col-span-full text-center py-12">
-            No employees registered yet
-          </p>
-        ) : (
-          employees.map((employee) => (
-            <div
-              key={employee.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
-            >
-              <div className="bg-amber-600 text-white p-4">
-                <h3 className="text-lg font-semibold">{employee.name}</h3>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="border-t pt-4 space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span>{employee.username}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    <span>{employee.email || '—'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div> */}
+        </Card>
     </div>
   );
 }
