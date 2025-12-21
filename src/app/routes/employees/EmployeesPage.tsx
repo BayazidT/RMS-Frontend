@@ -33,9 +33,7 @@ export default function EmployeesPage() {
         page: currentPage,
         size: pageSize,}
       );
-      // The API returns { content: Employee[], totalElements, ... }
       setPageData(response || []);
-      // setEmployees(response.content || []);
     } catch (err) {
       alert('Failed to load employees');
     } finally {
