@@ -9,6 +9,7 @@ import DashboardLayout from '@/app/routes/dashboard.layout';
 import LoginPage from '@/app/routes/auth/LoginPage';
 import ReservationsPage from './app/routes/reservations/ReservationsPage';
 import EmployeesPage from './app/routes/employees/EmployeesPage';
+import ShiftPage from './app/routes/shifts/ShiftPage';
 
 // Lazy-load pages for better performance
 const OrdersPage = lazy(() => import('@/app/routes/orders/OrdersPage'));
@@ -107,10 +108,10 @@ export default function App() {
             }
           />
           <Route
-            path="menu"
+            path="shifts"
             element={
               <Suspense fallback={<PageLoading />}>
-                <OrdersPage />
+                <ShiftPage />
               </Suspense>
             }
           />
