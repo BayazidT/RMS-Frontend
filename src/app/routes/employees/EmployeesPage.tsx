@@ -1,6 +1,7 @@
 // src/app/routes/employees/EmployeesPage.tsx
 import { useState, useEffect } from 'react';
-import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
+
+import { Mail, User, Plus, Trash2, Eye, ChevronDown, ChevronUp, Search,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
   Car} from 'lucide-react';
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
@@ -194,14 +195,24 @@ export default function EmployeesPage() {
                           <td className="px-6 py-5">
                           <p className="font-medium text-gray-900">{res.email}</p>
                           </td>
-                          <td className="px-6 py-5 text-right">
-                      <button
-                        onClick={() => handleDelete(res.id)}
-                        className="text-red-600 hover:bg-red-50 p-3 rounded-lg transition"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </td>
+                          <td className="px-6 py-5 text-right flex justify-end gap-2">
+                            <button
+                            
+                              className="text-sky-600 hover:bg-sky-50 p-3 rounded-lg transition"
+                              title="View details"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleDelete(res.id)}
+                              className="text-red-600 hover:bg-red-50 p-3 rounded-lg transition"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </td>
+
                         </tr>
                       ))
                     )}
