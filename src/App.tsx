@@ -10,6 +10,7 @@ import LoginPage from '@/app/routes/auth/LoginPage';
 import ReservationsPage from './app/routes/reservations/ReservationsPage';
 import EmployeesPage from './app/routes/employees/EmployeesPage';
 import ShiftPage from './app/routes/shifts/ShiftPage';
+import EmployeeDetailsPage from './app/routes/employees/EmployeeDetailsPage';
 
 // Lazy-load pages for better performance
 const OrdersPage = lazy(() => import('@/app/routes/orders/OrdersPage'));
@@ -123,6 +124,15 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route
+            path="employees/:id"
+            element={
+              <Suspense fallback={<PageLoading />}>
+                <EmployeeDetailsPage />
+              </Suspense>
+            }
+          />
+
           <Route
             path="users"
             element={

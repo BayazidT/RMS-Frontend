@@ -1,22 +1,24 @@
-// Represents a single shift entry
-export interface Schedule {
-    id: string;
-    name: string;
-    shiftDate: string;        // ISO date string: YYYY-MM-DD
-    startTime: string;        // ISO datetime string (UTC)
-    endTime: string;          // ISO datetime string (UTC)
-    startTimeLocal: string;   // Local time: HH:mm:ss
-    endTimeLocal: string;     // Local time: HH:mm:ss
-  }
-  
-  // Represents the paginated response wrapper
-  export interface ScheduleResponse {
-    totalElements: number;
-    totalPages: number;
-    pageNumber: number;
-    pageSize: number;
-    first: boolean;
-    last: boolean;
-    content: Schedule[];
-  }
-  
+export interface DaySchedule {
+  dayOfWeek: number;
+  dayNameGerman: string;
+  startTime: string | null;
+  endTime: string | null;
+  isOff: boolean;
+  displayText: string;
+}
+
+export interface WeeklySchedule {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+}
+
+export interface WeeklyScheduleResponse {
+  schedule: WeeklySchedule;
+}
+
+export type WeekDayKey = keyof WeeklySchedule;
