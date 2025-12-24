@@ -1,3 +1,4 @@
+import { WeeklyScheduleResponse } from '@/types/schedule.types';
 import api from './axiosInstance';
 
 interface GetScheduleParams {
@@ -6,7 +7,8 @@ interface GetScheduleParams {
   // status?: string;
 }
 
-export const getSchedules = async (string userId): Promise<> =>{
-    
+export const getScheduleByUserID = async (userId: string): Promise<WeeklyScheduleResponse> =>{
+  const res = await api.get<WeeklyScheduleResponse>(`/v1/private/schedule/${userId}/weekly-schedule`);
+  return res.data;
 }
 

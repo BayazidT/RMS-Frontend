@@ -7,6 +7,7 @@ import { Mail, User, Plus, Trash2, Eye, ChevronDown, ChevronUp, Search,
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
 import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
 import Card from '@/components/ui/Card';
+import { useNavigate } from 'react-router-dom';
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,6 +73,8 @@ export default function EmployeesPage() {
         alert('Failed to delete');
       }
     };
+    const navigate = useNavigate();
+
 
   if (loading) {
     return <div className="p-8 text-center">Loading employees...</div>;
@@ -197,7 +200,7 @@ export default function EmployeesPage() {
                           </td>
                           <td className="px-6 py-5 text-right flex justify-end gap-2">
                             <button
-                            
+                                onClick={() => navigate(`/employees/${res.id}`)}
                               className="text-sky-600 hover:bg-sky-50 p-3 rounded-lg transition"
                               title="View details"
                             >

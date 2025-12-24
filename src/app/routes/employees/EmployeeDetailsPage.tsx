@@ -1,120 +1,191 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Card from '@/components/ui/Card';
-import { getEmployeeById, updateWeeklySchedule } from '@/api/employeeApi';
-import type { Employee, WeeklySchedule } from '@/types/employee.types';
+import { getEmployeeById } from '@/api/employeeApi';
+import { getScheduleByUserID } from '@/api/scheduleApi';
+import type { Employee } from '@/types/employee.types';
+import type { DaySchedule, WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
+
+const leftColumnDays: WeekDayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday'];
+const rightColumnDays: WeekDayKey[] = ['friday', 'saturday', 'sunday'];
+
+const englishDayNames: Record<WeekDayKey, string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+};
 
 export default function EmployeeDetailsPage() {
-  const { id } = useParams();
-  const [employee, setEmployee] = useState<Employee>();
-  const [schedule, setSchedule] = useState<WeeklySchedule>();
+  const { id } = useParams<{ id: string }>();
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDetails = async () => {
+      if (!id) return;
+      try {
+        const [employeeRes, scheduleRes] = await Promise.all([
+          getEmployeeById(id),
+          getScheduleByUserID(id),
+        ]);
+
+        setEmployee(employeeRes);
+        setSchedule(scheduleRes.schedule);
+      } catch (error) {
+        console.error('Failed to load employee details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDetails();
-  }, []);
+  }, [id]);
 
-  const fetchDetails = async () => {
-    try {
-      const res = await getEmployeeById(id!);
-      setEmployee(res);
-      setSchedule(res.weeklySchedule);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleDay = async (dayKey: string) => {
+  const toggleDay = (dayKey: WeekDayKey) => {
     if (!schedule) return;
 
     const updated = {
       ...schedule,
       [dayKey]: {
         ...schedule[dayKey],
-        isOff: !schedule[dayKey].isOff
-      }
+        isOff: !schedule[dayKey].isOff,
+      },
     };
 
     setSchedule(updated);
-    await updateWeeklySchedule(id!, updated);
+    // TODO: persist via API
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!employee) {
+    return <div className="p-8 text-center text-gray-600">Employee not found.</div>;
+  }
+
+  const renderDayRow = (dayKey: WeekDayKey) => {
+    if (!schedule) return null;
+    const day = schedule[dayKey];
+    const isWorking = !day.isOff;
+
+    return (
+      <div
+        key={dayKey}
+        className="flex items-center justify-between px-5 py-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+      >
+        <div className="flex-1">
+          <p className="font-medium text-gray-900">{englishDayNames[dayKey]}</p>
+          <p className="text-sm text-gray-600 mt-0.5">
+            {day.isOff ? 'Off' : day.displayText}
+          </p>
+        </div>
+
+        <ToggleSwitch
+          checked={isWorking}
+          onChange={() => toggleDay(dayKey)}
+          label={`Toggle ${englishDayNames[dayKey]}`}
+        />
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">
-        Employee Details
-      </h1>
+    <div className="max-w-6xl mx-auto p-6 space-y-10">
+      {/* Header */}
+      <header>
+        <div className='px-4'>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {employee.name || 'Employee Details'}
+        </h1>
+        <p className="mt-2 text-lg text-gray-600">Weekly working schedule</p>
+        </div>
+      </header>
 
       {/* Employee Info */}
-      <Card>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Info label="Name" value={employee?.name} />
-          <Info label="Username" value={employee?.username} />
-          <Info label="Email" value={employee?.email || '-'} />
+      <div className="flex justify-center">
+      <Card className="w-full max-w-4xl shadow-sm p-4">
+        <h2 className="text-xl font-semibold text-gray-900 mb-5">Personal Information</h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Username</dt>
+            <dd className="mt-1 text-base text-gray-900">{employee.username}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Email</dt>
+            <dd className="mt-1 text-base text-gray-900">{employee.email || '–'}</dd>
+          </div>
         </div>
       </Card>
+      </div>
 
-      {/* Weekly Schedule */}
-      <Card>
-        <h2 className="text-xl font-semibold mb-4">Weekly Schedule</h2>
+      {/* Refined Two-Column Schedule - Tighter padding */}
+      <div className="flex justify-center">
+        <Card className="w-full max-w-4xl shadow-sm p-4">  {/* Reduced overall card padding */}
+          <h2 className="text-xl font-semibold text-gray-900 mb-5 text-center">  {/* Tighter margin */}
+            Weekly Schedule
+          </h2>
 
-        <div className="space-y-3">
-          {schedule &&
-            Object.entries(schedule).map(([key, day]) => (
-              <div
-                key={key}
-                className="flex justify-between items-center p-4 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{day.dayNameGerman}</p>
-                  <p className="text-sm text-gray-500">
-                    {day.isOff ? 'Frei' : day.displayText}
-                  </p>
-                </div>
-
-                <Toggle
-                  checked={!day.isOff}
-                  onChange={() => toggleDay(key)}
-                />
+          {schedule ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">  {/* Reduced gap between columns */}
+              {/* Left Column: Mon–Thu */}
+              <div className="space-y-2">  {/* Reduced row spacing */}
+                {leftColumnDays.map(renderDayRow)}
               </div>
-            ))}
-        </div>
-      </Card>
+
+              {/* Right Column: Fri–Sun */}
+              <div className="space-y-2">
+                {rightColumnDays.map(renderDayRow)}
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-6">No schedule defined yet.</p>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
 
-/* Helper Components */
-
-function Info({ label, value }: { label: string; value?: string }) {
-  return (
-    <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-medium text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-function Toggle({
+/* Same clean toggle */
+function ToggleSwitch({
   checked,
   onChange,
+  label,
 }: {
   checked: boolean;
   onChange: () => void;
+  label: string;
 }) {
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
       onClick={onChange}
-      className={`w-16 h-8 rounded-full flex items-center px-1 transition
-        ${checked ? 'bg-sky-600' : 'bg-gray-300'}`}
+      className={`
+        relative inline-flex h-9 w-16 items-center rounded-full transition-colors
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        ${checked ? 'bg-blue-600' : 'bg-gray-300'}
+      `}
     >
-      <div
-        className={`w-6 h-6 bg-white rounded-full shadow transform transition
-          ${checked ? 'translate-x-8' : ''}`}
+      <span
+        className={`
+          inline-block h-7 w-7 transform rounded-full bg-white shadow
+          transition duration-200 ease-in-out
+          ${checked ? 'translate-x-7' : 'translate-x-1'}
+        `}
       />
-      <span className="sr-only">Toggle</span>
     </button>
   );
 }
