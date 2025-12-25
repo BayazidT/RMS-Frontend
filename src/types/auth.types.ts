@@ -1,9 +1,9 @@
 export interface User {
     id: number;
     username: string;
-    role: 'ADMIN' | 'MANAGER' | 'STAFF';
-    // add more fields from your /profile response
-  }
+    roles: 'ADMIN' | 'MANAGER' | 'STAFF';
+    permissions:[]
+    }
   
   export interface Tokens {
     accessToken: string;

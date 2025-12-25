@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       const tokens = await login({ username, password });
       await storeLogin(tokens);
-      navigate('/reservations', { replace: true });
+      navigate('/', { replace: true });
     } catch (err: any) {
       const message =
         err.response?.data?.message ||

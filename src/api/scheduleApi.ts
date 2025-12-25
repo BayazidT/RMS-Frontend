@@ -1,4 +1,4 @@
-import { WeeklyScheduleResponse } from '@/types/schedule.types';
+import { WeeklySchedule, WeeklyScheduleResponse } from '@/types/schedule.types';
 import api from './axiosInstance';
 
 interface GetScheduleParams {
@@ -12,3 +12,6 @@ export const getScheduleByUserID = async (userId: string): Promise<WeeklySchedul
   return res.data;
 }
 
+export const createOrUpdateSchedule = async (userId: string, schedule: WeeklySchedule) =>{
+  await api.post(`/v1/private/schedule/${userId}/weekly-schedule`, schedule);
+}
