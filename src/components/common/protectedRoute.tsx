@@ -1,11 +1,11 @@
 // src/components/common/ProtectedRoute.tsx
 import { Navigate, useLocation } from 'react-router-dom';
-import { ReactNode } from 'react';  // ← Import ReactNode
+import { ReactNode } from 'react';  
 import { useAuthStore } from '@/store/authStore';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-  children: ReactNode;  // ← Correct type (no more error)
+  children: ReactNode;  
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {

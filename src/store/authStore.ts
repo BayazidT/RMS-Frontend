@@ -15,9 +15,11 @@ export const useAuthStore = create<AuthState>()(
         set({ tokens, isAuthenticated: true });
         try {
           const user = await getProfile(tokens.accessToken);
+          console.log(user);
           set({ user });
         } catch (err) {
           get().logout();
+          throw err;
         }
       },
 
@@ -45,7 +47,11 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage', // saved to localStorage
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        tokens: state.tokens ? { accessToken: state.tokens.accessToken } : null,
+      }),
     }
   )
 );

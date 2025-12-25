@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Calendar, Package, Users, Utensils, UserCog, Home, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { use } from 'react';
 
 const navItems = [
   { to: '/reservations', label: 'Reservations', icon: Calendar },
@@ -51,7 +52,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="font-medium">{user?.username}</p>
-            <p className="text-sky-200 text-xs">Admin</p>
+            <p className="text-sky-200 text-xs">{user?.roles[0]}</p>
           </div>
         </div>
         <button

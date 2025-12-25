@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Card from '@/components/ui/Card';
 import { getEmployeeById } from '@/api/employeeApi';
-import { getScheduleByUserID } from '@/api/scheduleApi';
+import { createOrUpdateSchedule, getScheduleByUserID } from '@/api/scheduleApi';
 import type { Employee } from '@/types/employee.types';
 import type { DaySchedule, WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
 
@@ -46,19 +46,23 @@ export default function EmployeeDetailsPage() {
     fetchDetails();
   }, [id]);
 
-  const toggleDay = (dayKey: WeekDayKey) => {
+  const toggleDay = (dayKey: WeekDayKey, id: string) => {
     if (!schedule) return;
+    console.log(schedule);
 
     const updated = {
       ...schedule,
       [dayKey]: {
         ...schedule[dayKey],
         isOff: !schedule[dayKey].isOff,
-      },
+        startTime:"10:00:00",
+        endTime:"22:00:00",
+        displayText:"10:00 – 22:00 Uhr"
+      }
     };
-
     setSchedule(updated);
-    // TODO: persist via API
+    console.log(updated)
+     createOrUpdateSchedule(id, updated);
   };
 
   if (loading) {
@@ -92,7 +96,7 @@ export default function EmployeeDetailsPage() {
 
         <ToggleSwitch
           checked={isWorking}
-          onChange={() => toggleDay(dayKey)}
+          onChange={() => toggleDay(dayKey, employee?.id)}
           label={`Toggle ${englishDayNames[dayKey]}`}
         />
       </div>
