@@ -8,25 +8,28 @@ import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi'
 import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
 import Card from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
+import { getRoles } from '@/api/roleApi';
+import { Role } from '@/types/role.types';
+
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 2; // Match your backend default
-  
+  const pageSize = 2;
   const [pageData, setPageData] = useState<EmployeePage>();
-  // const [employees, setEmployees] = useState<Employee[]>();
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   const [formData, setFormData] = useState<EmployeeRequest>({
     name: '',
     username: '',
     email: '',
-    password: '',
+    roleId: '',
   });
 
   useEffect(() => {
     fetchEmployees();
+    fetchRoles();
   }, [currentPage]);
 
   const fetchEmployees = async () => {
@@ -57,11 +60,19 @@ export default function EmployeesPage() {
         name: '',
         username: '',
         email: '',
-        password: '',
+        roleId: '',
       });
       fetchEmployees(); // Refresh list
     } catch (err) {
       alert('Failed to create employee');
+    }
+  };
+  const fetchRoles = async () => {
+    try {
+      const response = await getRoles();
+      setRoles(response);
+    } catch (error) {
+      console.error("Failed to fetch roles", error);
     }
   };
    const handleDelete = async (id: string) => {
@@ -121,14 +132,23 @@ export default function EmployeesPage() {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="px-4 py-2 border rounded-lg"
             />
-            <input
-              type="password"
+             <select
               required
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              value={formData.roleId}
+              onChange={(e) =>
+                setFormData({ ...formData, roleId: e.target.value })
+              }
               className="px-4 py-2 border rounded-lg"
-            />
+            >
+              <option value="" disabled>
+                Select Role
+              </option>
+              {roles?.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
             <div className="md:col-span-2 flex gap-4">
               <button
                 type="submit"

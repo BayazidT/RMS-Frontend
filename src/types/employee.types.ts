@@ -23,5 +23,5 @@ export interface EmployeeRequest {
   username: string;
   name: string;
   email: string;
-  password: string;
+  roleId: string;
 }
