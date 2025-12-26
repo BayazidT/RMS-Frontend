@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Card from '@/components/ui/Card';
 import { getEmployeeById } from '@/api/employeeApi';
-import { createOrUpdateSchedule, getScheduleByUserID } from '@/api/scheduleApi';
+import { createOrUpdateSchedule, getScheduleByUserId } from '@/api/scheduleApi';
 import type { Employee } from '@/types/employee.types';
 import type { DaySchedule, WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
+import { getShiftsByUserId } from '@/api/shiftApi';
+import { ShiftResponse } from '@/types/shift.types';
 
 const leftColumnDays: WeekDayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday'];
 const rightColumnDays: WeekDayKey[] = ['friday', 'saturday', 'sunday'];
@@ -23,19 +25,30 @@ export default function EmployeeDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
+  const [shift, setShift] = useState<ShiftResponse>();
+  
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [fromDate, setFromDate] = useState('');
+
+  const [toDate, setToDate] = useState('');
+
+  const pageSize = 2;
 
   useEffect(() => {
     const fetchDetails = async () => {
       if (!id) return;
       try {
-        const [employeeRes, scheduleRes] = await Promise.all([
+        const [employeeRes, scheduleRes, userShifts] = await Promise.all([
           getEmployeeById(id),
-          getScheduleByUserID(id),
+          getScheduleByUserId(id),
+          getShiftsByUserId(id,{page: currentPage,
+            size: pageSize, fromDate: fromDate, toDate: toDate}),
         ]);
 
         setEmployee(employeeRes);
         setSchedule(scheduleRes.schedule);
+        setShift(userShifts)
       } catch (error) {
         console.error('Failed to load employee details:', error);
       } finally {
@@ -44,7 +57,9 @@ export default function EmployeeDetailsPage() {
     };
 
     fetchDetails();
-  }, [id]);
+  }, [id, currentPage]);
+
+
 
   const toggleDay = (dayKey: WeekDayKey, id: string) => {
     if (!schedule) return;

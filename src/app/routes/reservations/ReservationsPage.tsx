@@ -29,11 +29,9 @@ export default function ReservationsTableView() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 2; // Match your backend default
 
-  // Client-side sorting (optional – you can move to server later)
   const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // Fetch data whenever page, search, or filter changes
   useEffect(() => {
     fetchReservations();
   }, [currentPage]);
