@@ -26,14 +26,12 @@ export default function ReservationsTableView() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 2; // Match your backend default
 
-  // Client-side sorting (optional – you can move to server later)
   const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // Fetch data whenever page, search, or filter changes
   useEffect(() => {
     fetchReservations();
   }, [currentPage]);
@@ -275,9 +273,9 @@ export default function ReservationsTableView() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
             <p className="text-sm text-gray-600">
-              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+              Showing page {currentPage + 1} of {totalPages} ({totalElements} total)
             </p>
 
             <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ interface GetScheduleParams {
   // status?: string;
 }
 
-export const getScheduleByUserID = async (userId: string): Promise<WeeklyScheduleResponse> =>{
+export const getScheduleByUserId = async (userId: string): Promise<WeeklyScheduleResponse> =>{
   const res = await api.get<WeeklyScheduleResponse>(`/v1/private/schedule/${userId}/weekly-schedule`);
   return res.data;
 }
