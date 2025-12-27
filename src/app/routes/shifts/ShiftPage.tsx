@@ -8,11 +8,42 @@ import { getShifts } from '@/api/shiftApi';
 
 
 export default function ShiftPage(){
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 2; 
+    const [currentPage, setCurrentPage] = useState(0);
     const [pageData, setPageData] = useState<ShiftResponse>();
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0 = Jan, 11 = Dec
+    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+
+    const pageSize = 2;
+
+  const getMonthStartEnd = (year: number, month: number) => {
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 0); // Last day of month
+
+    const format = (date: Date) =>
+      date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    return { from: format(start), to: format(end) };
+  };
+
+  // Sync month/year picker → date range
+  useEffect(() => {
+    const { from, to } = getMonthStartEnd(selectedYear, selectedMonth);
+    setFromDate(from);
+    setToDate(to);
+    setCurrentPage(0); // Reset to first page (API is 0-based)
+  }, [selectedYear, selectedMonth]);
+
+  // Reset page when manual date inputs change (if you add them later)
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [fromDate, toDate]);
 
     useEffect(() => {
         fetchShifts();
@@ -31,22 +62,14 @@ export default function ShiftPage(){
           setLoading(false);
         }
       };
-      const totalPages = pageData?.totalPages || 1;
+      const totalPages = pageData?.totalPages || 0;
       const totalElements = pageData?.totalElements || 0;
       const shifts = pageData?.content || [];
       
       const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-        //   await createEmployee(formData);
-        //   setShowForm(false);
-        //   setFormData({
-        //     name: '',
-        //     username: '',
-        //     email: '',
-        //     password: '',
-        //   });
-          getShifts(); // Refresh list
+          getShifts();
         } catch (err) {
           alert('Failed to fetch shifts');
         }
@@ -69,6 +92,48 @@ export default function ShiftPage(){
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">Shift</h1>
           </div>
+          {/* Filters */}
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Shifts</h3>
+                  <div className="flex flex-col md:flex-row gap-6 items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Month & Year
+                      </label>
+                      <div className="flex gap-4">
+                        <select
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                        >
+                          {[
+                            'January', 'February', 'March', 'April', 'May', 'June',
+                            'July', 'August', 'September', 'October', 'November', 'December'
+                          ].map((m, i) => (
+                            <option key={i} value={i}>{m}</option>
+                          ))}
+                        </select>
+          
+                        <select
+                          value={selectedYear}
+                          onChange={(e) => setSelectedYear(Number(e.target.value))}
+                          className="flex-1 w-42 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                        >
+                          {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+          
+                  <div className="mt-4 text-sm text-gray-600">
+                    Showing shifts from <strong>{fromDate || 'beginning'}</strong> to <strong>{toDate || 'end'}</strong>
+                  </div>
+                  <div className="mt-4 text-m text-gray-600">
+                    <p>Total Shift: {totalElements} </p>
+                  </div>
+                </Card>
            {/* Table */}       
            <Card>     
                   <div className="overflow-x-auto">
@@ -143,50 +208,50 @@ export default function ShiftPage(){
                     </table>
                   </div>
                   {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
-                <p className="text-sm text-gray-600">
-                  Showing {pageData?.pageNumber || 0} of {totalElements} reservations
-                </p>
-    
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(0)}
-                    disabled={pageData?.first || loading}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronsLeft className="w-5 h-5" />
-                  </button>
-    
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                    disabled={pageData?.first || loading}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-    
-                  <span className="px-4 py-2 text-sm font-medium">
-                    Page {currentPage + 1} of {totalPages}
-                  </span>
-    
-                  <button
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={pageData?.last || loading}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-    
-                  <button
-                    onClick={() => setCurrentPage(totalPages - 1)}
-                    disabled={pageData?.last || loading}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronsRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            )}
+                    <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
+                      <p className="text-sm text-gray-600">
+                        Showing page {currentPage + 1} of {totalPages} ({totalElements} total)
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(0)}
+                          disabled={pageData?.first || loading}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronsLeft className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                          disabled={pageData?.first || loading}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+
+                        <span className="px-4 py-2 text-sm font-medium">
+                          Page {currentPage + 1} of {totalPages}
+                        </span>
+
+                        <button
+                          onClick={() => setCurrentPage(prev => prev + 1)}
+                          disabled={pageData?.last || loading}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => setCurrentPage(totalPages - 1)}
+                          disabled={pageData?.last || loading}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronsRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
             </Card>
         </div>
       );

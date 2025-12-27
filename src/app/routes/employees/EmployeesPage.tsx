@@ -13,7 +13,7 @@ import { Role } from '@/types/role.types';
 
 
 export default function EmployeesPage() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 2;
   const [pageData, setPageData] = useState<EmployeePage>();
   const [loading, setLoading] = useState(true);
@@ -45,9 +45,11 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   };
+
   const totalPages = pageData?.totalPages || 1;
   const totalElements = pageData?.totalElements || 0;
   const employees = pageData?.content || [];
+  let serialNumber = currentPage * pageSize + 1; 
   var id_prefix="KAK000"
   var random_number=1;
 
@@ -245,7 +247,7 @@ export default function EmployeesPage() {
               {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
             <p className="text-sm text-gray-600">
-              Showing {pageData?.numberOfElements || 0} of {totalElements} reservations
+              Showing page {currentPage + 1} of {totalPages} ({totalElements} total)
             </p>
 
             <div className="flex items-center gap-2">
