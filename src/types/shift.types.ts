@@ -2,14 +2,19 @@
 export interface Shift {
     id: string;
     name: string;
-    shiftDate: string;        // ISO date string: YYYY-MM-DD
-    startTime: string;        // ISO datetime string (UTC)
-    endTime: string;          // ISO datetime string (UTC)
-    startTimeLocal: string;   // Local time: HH:mm:ss
-    endTimeLocal: string;     // Local time: HH:mm:ss
+    shiftDate: string;        
+    startTime: string;        
+    endTime: string;          
+    startTimeLocal: string;   
+    endTimeLocal: string;     
   }
   
-  // Represents the paginated response wrapper
+  export interface ShiftRequest {
+    shiftDate: string;        
+    startTime: string;        
+    endTime: string;       
+  }
+
   export interface ShiftResponse {
     totalElements: number;
     totalPages: number;

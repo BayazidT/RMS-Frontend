@@ -3,8 +3,10 @@ import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
   Car} from 'lucide-react';
 import Card from '@/components/ui/Card';
-import { ShiftResponse } from '@/types/shift.types';
-import { getShifts } from '@/api/shiftApi';
+import { ShiftRequest, ShiftResponse } from '@/types/shift.types';
+import { createSingleShift,createFullShifts, getShifts } from '@/api/shiftApi';
+import { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
+import { getEmployees } from '@/api/employeeApi';
 
 
 export default function ShiftPage(){
@@ -14,41 +16,59 @@ export default function ShiftPage(){
     const [showForm, setShowForm] = useState(false);
     const today = new Date();
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0 = Jan, 11 = Dec
+    const currentMonth = today.getMonth(); 
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
     const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
+    const [employeeInfo, setEmployeeInfo] =useState<Employee[]>();
+    const [formData, setFormData] = useState<ShiftRequest>({
+      shiftDate: '',
+      startTime: '',
+      endTime: ''
+    })
+    const [userId, setUserId] = useState('');
 
     const pageSize = 2;
 
   const getMonthStartEnd = (year: number, month: number) => {
     const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0); // Last day of month
+    const end = new Date(year, month + 1, 0); 
 
     const format = (date: Date) =>
-      date.toISOString().split('T')[0]; // YYYY-MM-DD
+      date.toISOString().split('T')[0]; 
 
     return { from: format(start), to: format(end) };
   };
 
-  // Sync month/year picker → date range
   useEffect(() => {
     const { from, to } = getMonthStartEnd(selectedYear, selectedMonth);
     setFromDate(from);
     setToDate(to);
-    setCurrentPage(0); // Reset to first page (API is 0-based)
+    setCurrentPage(0); 
   }, [selectedYear, selectedMonth]);
 
-  // Reset page when manual date inputs change (if you add them later)
   useEffect(() => {
     setCurrentPage(0);
   }, [fromDate, toDate]);
 
     useEffect(() => {
         fetchShifts();
+        fetchEmployees();
+        
       }, [currentPage]);
     
+      const fetchEmployees = async () => {
+        try {
+          const response = await getEmployees({
+                  page: 0,
+                  size: 1000,}
+                );
+          setEmployeeInfo(response.content);
+        } catch (error) {
+          
+        }
+      }
       const fetchShifts = async () => {
         try {
           const response = await getShifts({
@@ -65,11 +85,45 @@ export default function ShiftPage(){
       const totalPages = pageData?.totalPages || 0;
       const totalElements = pageData?.totalElements || 0;
       const shifts = pageData?.content || [];
+      const toOffsetDateTime = (localDateTime: string | null): string | null => {
+        if (!localDateTime) return null;
+        return new Date(localDateTime).toISOString();
+      };
       
+      const combineDateTime = (date: string, time: string): string | null => {
+        if (!date || !time) return null;
+        // Combine into "2025-12-29T12:00"
+        const dateTimeString = `${date}T${time}`;
+        // Convert to ISO string (UTC) for OffsetDateTime
+        return new Date(dateTimeString).toISOString();
+      };
       const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+
+          if(userId == 'create_for_all'){
+            const payload = {
+              shiftDate: formData.shiftDate,
+              startTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.startTime)),
+              endTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.endTime)),
+            };
+          createFullShifts(payload);
+          setShowForm(false);
           getShifts();
+          }else{
+          const payload = {
+            shiftDate: formData.shiftDate,
+            startTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.startTime)),
+            endTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.endTime)),
+          };
+          createSingleShift(userId, payload);
+          setFormData({
+            shiftDate: '',
+            startTime: '',
+            endTime: ''
+          });
+          getShifts();
+        }
         } catch (err) {
           alert('Failed to fetch shifts');
         }
@@ -88,11 +142,124 @@ export default function ShiftPage(){
         return <div className="p-8 text-center">Loading Shift...</div>;
       }
     return (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Shift</h1>
-          </div>
+      <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Shifts</h1>
+    
+        {/* Right-side buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg
+                       hover:bg-sky-700 transition"
+          >
+            <Plus className="w-5 h-5" />
+            Create Shift
+          </button>
+        </div>
+      </div>
+        
           {/* Filters */}
+          {showForm && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Create Shifts</h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <label
+              className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+              Shift Date
+            </label>
+
+            <input
+              type="date"
+              required
+              value={formData.shiftDate}
+              onChange={(e) =>
+                setFormData({ ...formData, shiftDate: e.target.value })
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                        focus:ring-2 focus:ring-sky-500 outline-none"
+            />
+          </div>
+
+          <div className="relative">
+            <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+              Start Time
+            </label>
+
+            <input
+              type="time"
+              required
+              value={formData.startTime}
+              onChange={(e) =>
+                setFormData({ ...formData, startTime: e.target.value })
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                        focus:ring-2 focus:ring-sky-500 outline-none"
+            />
+          </div>
+
+          <div className="relative">
+            <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+              End Time
+            </label>
+
+            <input
+              type="time"
+              value={formData.endTime}
+              onChange={(e) =>
+                setFormData({ ...formData, endTime: e.target.value })
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                        focus:ring-2 focus:ring-sky-500 outline-none"
+            />
+          </div>
+
+                      
+          <div className="relative">
+            <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+              Employee
+            </label>
+
+            <select
+              required
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                        focus:ring-2 focus:ring-sky-500 outline-none bg-white"
+            >
+              <option value="" disabled>Select Employee</option>
+              <option key="create_for_all" value="create_for_all" >
+               For All Employee
+              </option>
+
+              {employeeInfo?.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+            <div className="md:col-span-2 flex gap-4">
+              <button
+                type="submit"
+                className="bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700"
+              >
+                Create Shift
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="bg-gray-300 px-6 py-3 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      {!showForm && (
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Shifts</h3>
                   <div className="flex flex-col md:flex-row gap-6 items-end">
@@ -134,6 +301,7 @@ export default function ShiftPage(){
                     <p>Total Shift: {totalElements} </p>
                   </div>
                 </Card>
+      )}
            {/* Table */}       
            <Card>     
                   <div className="overflow-x-auto">
