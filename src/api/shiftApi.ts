@@ -1,5 +1,5 @@
 // src/api/reservationApi.ts
-import { ShiftResponse } from '@/types/shift.types';
+import { ShiftRequest, ShiftResponse } from '@/types/shift.types';
 import api from './axiosInstance';
 
 interface GetShiftParams {
@@ -22,6 +22,16 @@ export const getShifts = async (
   const res = await api.get<ShiftResponse>('/v1/private/shift/list', {params});
   return res.data;
 };
+
+export const createSingleShift = async (id: string, data: any): Promise<ShiftResponse> =>{
+  const res = await api.post(`/v1/private/shift/single/${id}`, data)
+  return res.data;
+}
+
+export const createFullShifts =  async (data: any): Promise<any> =>{
+  const res = await api.post('/v1/private/shift/create', data);
+  return res;
+}
 
 export const getShiftsByUserId = async (id: string,
   params: GetShiftByUserIdParams = {}
