@@ -47,7 +47,7 @@ export interface ReservationPage {
   numberOfElements: number; // optional, current page size
 }
 
-export interface CreateReservationRequest {
+export interface ReservationRequest {
   reservationDate: string;
   reservationTime: string;
   guestCount: number;

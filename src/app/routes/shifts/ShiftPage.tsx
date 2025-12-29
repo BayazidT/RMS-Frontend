@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
-  Car} from 'lucide-react';
+import { Plus, Trash2, Search,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { ShiftRequest, ShiftResponse } from '@/types/shift.types';
 import { createSingleShift,createFullShifts, getShifts } from '@/api/shiftApi';
-import { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
+import { Employee } from '@/types/employee.types';
 import { getEmployees } from '@/api/employeeApi';
 
 
@@ -14,49 +13,22 @@ export default function ShiftPage(){
     const [pageData, setPageData] = useState<ShiftResponse>();
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); 
-    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-    const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
-    const [fromDate, setFromDate] = useState('');
-    const [toDate, setToDate] = useState('');
     const [employeeInfo, setEmployeeInfo] =useState<Employee[]>();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [shiftDate, setShiftDate] = useState('');
     const [formData, setFormData] = useState<ShiftRequest>({
       shiftDate: '',
       startTime: '',
       endTime: ''
-    })
+    });
     const [userId, setUserId] = useState('');
-
-    const pageSize = 2;
-
-  const getMonthStartEnd = (year: number, month: number) => {
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0); 
-
-    const format = (date: Date) =>
-      date.toISOString().split('T')[0]; 
-
-    return { from: format(start), to: format(end) };
-  };
-
-  useEffect(() => {
-    const { from, to } = getMonthStartEnd(selectedYear, selectedMonth);
-    setFromDate(from);
-    setToDate(to);
-    setCurrentPage(0); 
-  }, [selectedYear, selectedMonth]);
-
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [fromDate, toDate]);
+    const pageSize = 10;
 
     useEffect(() => {
         fetchShifts();
         fetchEmployees();
         
-      }, [currentPage]);
+      }, [currentPage, searchTerm, shiftDate]);
     
       const fetchEmployees = async () => {
         try {
@@ -73,7 +45,10 @@ export default function ShiftPage(){
         try {
           const response = await getShifts({
             page: currentPage,
-            size: pageSize,}
+            size: pageSize,
+            search: searchTerm,
+            shiftDate: shiftDate
+          }
           );
           setPageData(response || []);
         } catch (err) {
@@ -147,6 +122,7 @@ export default function ShiftPage(){
         <h1 className="text-3xl font-bold text-gray-900">Shifts</h1>
     
         {/* Right-side buttons */}
+        {!showForm && (
         <div className="flex gap-3">
           <button
             onClick={() => setShowForm(!showForm)}
@@ -157,6 +133,7 @@ export default function ShiftPage(){
             Create Shift
           </button>
         </div>
+        )}
       </div>
         
           {/* Filters */}
@@ -260,47 +237,37 @@ export default function ShiftPage(){
         </div>
       )}
       {!showForm && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Shifts</h3>
-                  <div className="flex flex-col md:flex-row gap-6 items-end">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Month & Year
-                      </label>
-                      <div className="flex gap-4">
-                        <select
-                          value={selectedMonth}
-                          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
-                        >
-                          {[
-                            'January', 'February', 'March', 'April', 'May', 'June',
-                            'July', 'August', 'September', 'October', 'November', 'December'
-                          ].map((m, i) => (
-                            <option key={i} value={i}>{m}</option>
-                          ))}
-                        </select>
-          
-                        <select
-                          value={selectedYear}
-                          onChange={(e) => setSelectedYear(Number(e.target.value))}
-                          className="flex-1 w-42 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
-                        >
-                          {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
-                            <option key={y} value={y}>{y}</option>
-                          ))}
-                        </select>
+              <Card className="p-6">
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 relative">
+                          <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search by name, phone, or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                          />
+                        </div>
+                        <div className="relative">
+                        <label
+                          className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                          Chose Shift Date
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={shiftDate}
+                          onChange={(e) =>
+                            setShiftDate(e.target.value)
+                          }
+                          className="w-80 px-4 py-3 border border-gray-300 rounded-lg
+                                    focus:ring-2 focus:ring-sky-500 outline-none"
+                        />
+                        </div>
+                        
                       </div>
-                    </div>
-                  </div>
-          
-                  <div className="mt-4 text-sm text-gray-600">
-                    Showing shifts from <strong>{fromDate || 'beginning'}</strong> to <strong>{toDate || 'end'}</strong>
-                  </div>
-                  <div className="mt-4 text-m text-gray-600">
-                    <p>Total Shift: {totalElements} </p>
-                  </div>
-                </Card>
+                    </Card>
       )}
            {/* Table */}       
            <Card>     

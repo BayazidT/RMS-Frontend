@@ -42,7 +42,7 @@ export default function EmployeeDetailsPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
-  const pageSize = 2;
+  const pageSize = 10;
 
   const getMonthStartEnd = (year: number, month: number) => {
     const start = new Date(year, month, 1);
@@ -172,7 +172,7 @@ export default function EmployeeDetailsPage() {
           <h1 className="text-3xl font-bold text-gray-900">
             {employee.name || 'Employee Details'}
           </h1>
-          <p className="mt-2 text-lg text-gray-600">Weekly working schedule</p>
+          <p className="mt-2 text-lg text-gray-600">Employee Information</p>
         </div>
       </header>
 

@@ -5,7 +5,8 @@ import api from './axiosInstance';
 interface GetShiftParams {
   page?: number;
   size?: number;
-  // status?: string;
+  search?: string;
+  shiftDate?: string;
 }
 
 interface GetShiftByUserIdParams {

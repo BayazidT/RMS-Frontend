@@ -14,7 +14,7 @@ import { Role } from '@/types/role.types';
 
 export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 2;
+  const pageSize = 10;
   const [pageData, setPageData] = useState<EmployeePage>();
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -97,6 +97,7 @@ export default function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
+        {!showForm && (
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 transition"
@@ -104,6 +105,7 @@ export default function EmployeesPage() {
           <Plus className="w-5 h-5" />
           New Employee
         </button>
+        )}
       </div>
 
       {/* New Employee Form */}
