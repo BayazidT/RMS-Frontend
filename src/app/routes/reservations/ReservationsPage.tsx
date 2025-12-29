@@ -4,16 +4,17 @@ import { format } from 'date-fns';
 import {
   Calendar, Clock, Users, Phone, Mail, Trash2,
   ChevronDown, ChevronUp, Search,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus
 } from 'lucide-react';
 
 import {
   getReservations,
   updateReservationStatus,
-  deleteReservation
+  deleteReservation,
+  createReservation
 } from '@/api/reservationApi';
 import { RESERVATION_STATUSES, RESERVATION_STATUS_LABELS } from '@/types/reservation.types';
-import type { Reservation, ReservationPage, ReservationStatus} from '@/types/reservation.types';
+import type { Reservation, ReservationPage, ReservationRequest, ReservationStatus} from '@/types/reservation.types';
 import Card from '@/components/ui/Card';
 
 type SortKey = 'reservationDate' | 'reservationTime' | 'customerName' | 'tableNumber' | 'status';
@@ -24,10 +25,21 @@ export default function ReservationsTableView() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  
+  const [showForm, setShowForm] = useState(false);
+const [formData, setFormData] = useState<ReservationRequest>({
+  tableNumber: 0,
+  guestCount: 0,
+  reservationDate: '',
+  reservationTime: '', // HH:mm:ss
+  status: 'PENDING',
+  customerName: '',
+  customerPhone: '',
+  customerEmail: '',
+  specialRequests: '',
+    });
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 2; // Match your backend default
+  const pageSize = 10; // Match your backend default
 
   const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -120,6 +132,17 @@ export default function ReservationsTableView() {
       setSortOrder('asc');
     }
   };
+  const handleSubmit = async(e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+
+      await createReservation(formData);
+      setShowForm(false);
+      fetchReservations();
+    } catch (error) {
+      
+    }
+  }
 
   const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
@@ -141,38 +164,207 @@ export default function ReservationsTableView() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Reservations - Table View</h1>
-
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-6 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Reservations</h1>
+    
+        {/* Right-side buttons */}
+        {!showForm && (
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg
+                       hover:bg-sky-700 transition"
           >
-            <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="SEATED">Seated</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="NO_SHOW">No Show</option>
-          </select>
+            <Plus className="w-5 h-5" />
+            Create Reservation
+          </button>
         </div>
-      </Card>
+        )}
+      </div>
+        {/* Filters */}
+                  {showForm && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold mb-4">Create</h2>
+                  <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <label
+                      className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                        Customer Name
+                    </label>
+        
+                    <input
+                      type="text"
+                      required
+                      value={formData.customerName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, customerName: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+        
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Customer Email
+                    </label>
+        
+                    <input
+                      type="email"
+                      required
+                      value={formData.customerEmail}
+                      onChange={(e) =>
+                        setFormData({ ...formData, customerEmail: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+        
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Customer Phone
+                    </label>
+        
+                    <input
+                      type="text"
+                      value={formData.customerPhone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, customerPhone: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Reservation Date
+                    </label>
+        
+                    <input
+                      type="date"
+                      value={formData.reservationDate}
+                      onChange={(e) =>
+                        setFormData({ ...formData, reservationDate: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Reservation Time
+                    </label>
+        
+                    <input
+                      type="time"
+                      value={formData.reservationTime}
+                      onChange={(e) =>
+                        setFormData({ ...formData, reservationTime: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Table No
+                    </label>
+        
+                    <input
+                      type="number"
+                      value={formData.tableNumber}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tableNumber: 10 })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Guest Count
+                    </label>
+        
+                    <input
+                      type="number"
+                      value={formData.guestCount}
+                      onChange={(e) =>
+                        setFormData({ ...formData, guestCount: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                    Remarks
+                    </label>
+        
+                    <input
+                      type="text"
+                      value={formData.specialRequests? formData.specialRequests : ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, specialRequests: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
+        
+                              
+                  
+        
+                    <div className="md:col-span-2 flex gap-4">
+                      <button
+                        type="submit"
+                        className="bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700"
+                      >
+                        Create Reservation
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowForm(false)}
+                        className="bg-gray-300 px-6 py-3 rounded-lg hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+              {!showForm && (
+                      <Card className="p-6">
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                            <input
+                              type="text"
+                              placeholder="Search by name, phone, or email..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                            />
+                          </div>
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-6 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                          >
+                            <option value="ALL">All Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="SEATED">Seated</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="NO_SHOW">No Show</option>
+                          </select>
+                        </div>
+                      </Card>
+              )}
 
       {/* Table */}
       <Card>
+        
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-sky-50 border-b-2 border-sky-200">
@@ -319,5 +511,6 @@ export default function ReservationsTableView() {
         )}
       </Card>
     </div>
+    
   );
 }
