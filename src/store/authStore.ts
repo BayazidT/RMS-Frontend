@@ -15,7 +15,6 @@ export const useAuthStore = create<AuthState>()(
         set({ tokens, isAuthenticated: true });
         try {
           const user = await getProfile(tokens.accessToken);
-          console.log(user);
           set({ user });
         } catch (err) {
           get().logout();

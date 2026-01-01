@@ -273,9 +273,8 @@ const [formData, setFormData] = useState<ReservationRequest>({
         
                     <input
                       type="number"
-                      value={formData.tableNumber}
                       onChange={(e) =>
-                        setFormData({ ...formData, tableNumber: 10 })
+                        setFormData({ ...formData, tableNumber: Number(e.target.value) })
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg
                                 focus:ring-2 focus:ring-sky-500 outline-none"
@@ -288,9 +287,8 @@ const [formData, setFormData] = useState<ReservationRequest>({
         
                     <input
                       type="number"
-                      value={formData.guestCount}
                       onChange={(e) =>
-                        setFormData({ ...formData, guestCount: e.target.value })
+                        setFormData({ ...formData, guestCount: Number(e.target.value) })
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg
                                 focus:ring-2 focus:ring-sky-500 outline-none"
