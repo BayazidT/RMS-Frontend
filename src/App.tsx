@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore'
 import { getProfile } from '@/api/authApi';
-
 import ProtectedRoute from '@/components/common/protectedRoute';
 import DashboardLayout from '@/app/routes/dashboard.layout';
+import Dashboard from './app/routes/DashboardPage';
 import LoginPage from '@/app/routes/auth/LoginPage';
 import ReservationsPage from './app/routes/reservations/ReservationsPage';
 import EmployeesPage from './app/routes/employees/EmployeesPage';
@@ -42,7 +42,7 @@ function AuthLoader() {
 // Redirect logic for root path
 function RootRedirect() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return isAuthenticated ? <Navigate to="/orders" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
 }
 
 // Loading fallback component
@@ -92,14 +92,14 @@ export default function App() {
           <Route index element={<RootRedirect />} />
 
           {/* Dashboard Pages */}
-          {/* <Route
-            path="orders"
+          <Route
+            path="dashboard"
             element={
               <Suspense fallback={<PageLoading />}>
-                <OrdersPage />
+                <Dashboard />
               </Suspense>
             }
-          /> */}
+          />
           <Route
             path="reservations"
             element={

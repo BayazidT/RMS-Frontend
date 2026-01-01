@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, Package, Users, Utensils, UserCog, Home, LogOut } from 'lucide-react';
+import { Calendar, Users, Utensils, UserCog, Home, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { use } from 'react';
 
 const navItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/reservations', label: 'Reservations', icon: Calendar },
   { to: '/shifts', label: 'Shift', icon: Utensils },
   { to: '/employees', label: 'Employees', icon: UserCog },
