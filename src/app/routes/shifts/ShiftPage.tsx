@@ -6,6 +6,7 @@ import { ShiftRequest, ShiftResponse } from '@/types/shift.types';
 import { createSingleShift,createFullShifts, getShifts } from '@/api/shiftApi';
 import { Employee } from '@/types/employee.types';
 import { getEmployees } from '@/api/employeeApi';
+import { format } from 'date-fns';
 
 
 export default function ShiftPage(){
@@ -15,7 +16,8 @@ export default function ShiftPage(){
     const [showForm, setShowForm] = useState(false);
     const [employeeInfo, setEmployeeInfo] =useState<Employee[]>();
     const [searchTerm, setSearchTerm] = useState('');
-    const [shiftDate, setShiftDate] = useState('');
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const [shiftDate, setShiftDate] = useState(today);
     const [formData, setFormData] = useState<ShiftRequest>({
       shiftDate: '',
       startTime: '',
@@ -75,32 +77,30 @@ export default function ShiftPage(){
       const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-
-          if(userId == 'create_for_all'){
+          if (userId === 'create_for_all') {
             const payload = {
               shiftDate: formData.shiftDate,
-              startTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.startTime)),
-              endTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.endTime)),
+              startTime: combineDateTime(formData.shiftDate, formData.startTime),
+              endTime: combineDateTime(formData.shiftDate, formData.endTime),
             };
-          createFullShifts(payload);
+            await createFullShifts(payload);  
+          } else {
+            const payload = {
+              shiftDate: formData.shiftDate,
+              startTime: combineDateTime(formData.shiftDate, formData.startTime),
+              endTime: combineDateTime(formData.shiftDate, formData.endTime),
+            };
+            await createSingleShift(userId, payload);  
+          }
           setShowForm(false);
-          getShifts();
-          }else{
-          const payload = {
-            shiftDate: formData.shiftDate,
-            startTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.startTime)),
-            endTime: toOffsetDateTime(combineDateTime(formData.shiftDate,formData.endTime)),
-          };
-          createSingleShift(userId, payload);
-          setFormData({
-            shiftDate: '',
-            startTime: '',
-            endTime: ''
-          });
-          getShifts();
-        }
+          setFormData({ shiftDate: '', startTime: '', endTime: '' });
+          setUserId('');
+      
+          await fetchShifts();  
+      
         } catch (err) {
-          alert('Failed to fetch shifts');
+          console.error(err);
+          alert('Failed to create shift');
         }
       };
        const handleDelete = async (id: string) => {
@@ -279,8 +279,8 @@ export default function ShiftPage(){
                             { key: 'serial', label: 'Serial#' },
                             { key: 'name', label: 'Name' },
                             { key: 'shiftDate', label: 'Shift Date' },
-                            { key: 'shiftTime', label: 'Shift Time' },
-                            { key: 'endTime', label: 'End Time' },
+                            { key: 'shiftTime', label: 'Shift Start' },
+                            { key: 'endTime', label: 'Shift End' },
                           ].map(col => (
                             <th
                               key={col.key}
@@ -321,10 +321,10 @@ export default function ShiftPage(){
                               </td>
 
                               <td className="px-6 py-5">
-                              <p className="font-medium text-gray-900">{res.startTime}</p>
+                              <p className="font-medium text-gray-900">{format(new Date(`${res.startTime}`), 'h:mm a')}</p>
                               </td>
                               <td className="px-6 py-5">
-                              <p className="font-medium text-gray-900">{res.endTime}</p>
+                              <p className="font-medium text-gray-900">{format(new Date(`${res.endTime}`), 'h:mm a')}</p>
                               </td>
 
 

@@ -2,13 +2,6 @@
 import api from './axiosInstance';
 import type { Reservation, ReservationPage, ReservationRequest, ReservationStatus } from '@/types/reservation.types';
 
-// export const getReservations = async (): Promise<Reservation[]> => {
-//   const res = await api.get('/v1/private/reservations');
-//   return res.data;
-// };
-
-// src/api/reservationApi.ts
-
 interface GetReservationsParams {
   page?: number;
   size?: number;

@@ -51,7 +51,7 @@ export interface ReservationRequest {
   reservationDate: string;
   reservationTime: string;
   guestCount: number;
-  status: 'PENDING';
+  status: 'CONFIRMED';
   tableNumber: number;
   customerName: string;
   customerPhone: string;

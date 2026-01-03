@@ -1,13 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, Users, Utensils, UserCog, Home, LogOut } from 'lucide-react';
+import { Calendar, Utensils, UserCog, Home, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/reservations', label: 'Reservations', icon: Calendar },
   { to: '/shifts', label: 'Shift', icon: Utensils },
-  { to: '/employees', label: 'Employees', icon: UserCog },
-  { to: '/users', label: 'Customers', icon: Users },
+  { to: '/employees', label: 'Employees', icon: UserCog }
 ];
 
 export default function Sidebar() {
