@@ -31,7 +31,7 @@ const [formData, setFormData] = useState<ReservationRequest>({
   guestCount: 0,
   reservationDate: '',
   reservationTime: '', // HH:mm:ss
-  status: 'PENDING',
+  status: 'CONFIRMED',
   customerName: '',
   customerPhone: '',
   customerEmail: '',
@@ -43,10 +43,12 @@ const [formData, setFormData] = useState<ReservationRequest>({
 
   const [sortKey, setSortKey] = useState<SortKey>('reservationDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const [reserveDate, setReserveDate] = useState(today)
 
   useEffect(() => {
     fetchReservations();
-  }, [currentPage]);
+  }, [currentPage, reserveDate]);
 
   const fetchReservations = async () => {
     try {
@@ -54,6 +56,9 @@ const [formData, setFormData] = useState<ReservationRequest>({
       const data = await getReservations({
         page: currentPage,
         size: pageSize,
+        reservationDate: reserveDate,
+        search:searchTerm
+
       });
       setPageData(data);
     } catch (err) {
@@ -344,6 +349,22 @@ const [formData, setFormData] = useState<ReservationRequest>({
                               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none"
                             />
                           </div>
+                          <div className="relative">
+                        <label
+                          className="absolute -top-2 left-4 bg-white px-1 text-xs text-gray-600">
+                          Reservation Date
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={reserveDate}
+                          onChange={(e) =>
+                            setReserveDate(e.target.value)
+                          }
+                          className="w-80 px-4 py-3 border border-gray-300 rounded-lg
+                                    focus:ring-2 focus:ring-sky-500 outline-none"
+                        />
+                        </div>
                           <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}

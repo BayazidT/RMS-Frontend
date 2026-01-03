@@ -10,6 +10,8 @@ import type { Employee } from '@/types/employee.types';
 import type { DaySchedule, WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
 import { getShiftsByUserId } from '@/api/shiftApi';
 import { ShiftResponse } from '@/types/shift.types';
+import { format } from 'date-fns';
+
 
 const leftColumnDays: WeekDayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday'];
 const rightColumnDays: WeekDayKey[] = ['friday', 'saturday', 'sunday'];
@@ -285,10 +287,10 @@ export default function EmployeeDetailsPage() {
                       <p className="font-medium text-gray-900">{res.shiftDate}</p>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="font-medium text-gray-900">{res.startTime}</p>
+                      <p className="font-medium text-gray-900">{format(new Date(`${res.startTime}`), 'h:mm a')}</p>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="font-medium text-gray-900">{res.endTime}</p>
+                      <p className="font-medium text-gray-900">{format(new Date(`${res.endTime}`), 'h:mm a')}</p>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <button
