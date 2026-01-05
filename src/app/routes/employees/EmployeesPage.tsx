@@ -1,11 +1,9 @@
 // src/app/routes/employees/EmployeesPage.tsx
 import { useState, useEffect } from 'react';
-
-import { Mail, User, Plus, Trash2, Eye, ChevronDown, ChevronUp, Search,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
-  Car} from 'lucide-react';
+import {Plus, Trash2, Eye,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { getEmployees, createEmployee , deleteEmployee} from '@/api/employeeApi';
-import type { Employee, EmployeePage, EmployeeRequest } from '@/types/employee.types';
+import type { EmployeePage, EmployeeRequest } from '@/types/employee.types';
 import Card from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { getRoles } from '@/api/roleApi';

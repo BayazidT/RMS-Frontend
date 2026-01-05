@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Card from '@/components/ui/Card';
-import { Mail, User, Plus, Trash2, ChevronDown, ChevronUp, Search,
+import {Trash2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
-  Car} from 'lucide-react';
+  } from 'lucide-react';
 import { getEmployeeById } from '@/api/employeeApi';
 import { createOrUpdateSchedule, getScheduleByUserId } from '@/api/scheduleApi';
 import type { Employee } from '@/types/employee.types';
-import type { DaySchedule, WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
+import type { WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
 import { getShiftsByUserId } from '@/api/shiftApi';
 import { ShiftResponse } from '@/types/shift.types';
 import { format } from 'date-fns';
