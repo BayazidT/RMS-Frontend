@@ -54,7 +54,7 @@ export default function ShiftPage(){
           );
           setPageData(response || []);
         } catch (err) {
-          alert('Failed to load employees');
+          alert('Failed to load shifts');
         } finally {
           setLoading(false);
         }
