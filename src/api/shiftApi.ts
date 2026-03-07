@@ -34,6 +34,12 @@ export const createFullShifts =  async (data: any): Promise<any> =>{
   return res;
 }
 
+export const deleteShift =  async (id: String): Promise<String> =>{
+  const res = await api.delete(`/v1/private/shift/single/${id}`);
+  return res.data;
+}
+
+
 export const getShiftsByUserId = async (id: string,
   params: GetShiftByUserIdParams = {}
 ): Promise<ShiftResponse> => {
