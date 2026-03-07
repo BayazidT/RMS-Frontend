@@ -3,7 +3,7 @@ import { Plus, Trash2, Search,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { ShiftRequest, ShiftResponse } from '@/types/shift.types';
-import { createSingleShift,createFullShifts, getShifts } from '@/api/shiftApi';
+import { createSingleShift,createFullShifts, getShifts, deleteShift } from '@/api/shiftApi';
 import { Employee } from '@/types/employee.types';
 import { getEmployees } from '@/api/employeeApi';
 import { format } from 'date-fns';
@@ -106,6 +106,7 @@ export default function ShiftPage(){
        const handleDelete = async (id: string) => {
           if (!confirm('Delete this shift?')) return;
           try {
+            const res = await deleteShift(id);
             fetchShifts();
           } catch (err) {
             alert('Failed to delete');

@@ -48,7 +48,7 @@ export default function EmployeesPage() {
   const totalElements = pageData?.totalElements || 0;
   const employees = pageData?.content || [];
   let serialNumber = currentPage * pageSize + 1; 
-  var id_prefix="KAK000"
+  var id_prefix="ESM-000";
   var random_number=1;
 
   const handleSubmit = async (e: React.FormEvent) => {

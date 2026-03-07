@@ -16,7 +16,7 @@ export default function Sidebar() {
     <aside className="w-64 bg-sky-700 text-white flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-sky-600">
-        <h1 className="text-2xl font-bold">XYZ Restaurant</h1>
+        <h2 className="text-xl font-bold">Eiscafe San Marco</h2>
         <p className="text-sky-200 text-sm">Management</p>
       </div>
 
