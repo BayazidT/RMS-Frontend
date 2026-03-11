@@ -49,7 +49,10 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        tokens: state.tokens ? { accessToken: state.tokens.accessToken } : null,
+        // Persist full tokens so refreshAccessToken can run after reload
+        tokens: state.tokens ? { accessToken: state.tokens.accessToken, refreshToken: state.tokens.refreshToken } : null,
+        // Persist authenticated flag (or derive it in your app from tokens)
+        isAuthenticated: !!state.tokens,
       }),
     }
   )
