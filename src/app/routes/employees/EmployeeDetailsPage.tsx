@@ -26,6 +26,13 @@ const englishDayNames: Record<WeekDayKey, string> = {
   sunday: 'Sunday',
 };
 
+const getMonthStartEnd = (year: number, month: number) => {
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  const fmt = (date: Date) => date.toISOString().split('T')[0];
+  return { from: fmt(start), to: fmt(end) };
+};
+
 export default function EmployeeDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -33,41 +40,28 @@ export default function EmployeeDetailsPage() {
   const [shifts, setShifts] = useState<ShiftResponse | null>(null);
   
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0); // 0-based for API
+  const [currentPage, setCurrentPage] = useState(0);
+
   const today = new Date();
   const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth(); // 0 = Jan, 11 = Dec
+  const currentMonth = today.getMonth();
 
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
 
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const initialDates = getMonthStartEnd(currentYear, currentMonth);
+  const [fromDate, setFromDate] = useState(initialDates.from);
+  const [toDate, setToDate] = useState(initialDates.to);
 
   const pageSize = 10;
-
-  const getMonthStartEnd = (year: number, month: number) => {
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0); // Last day of month
-
-    const format = (date: Date) =>
-      date.toISOString().split('T')[0]; // YYYY-MM-DD
-
-    return { from: format(start), to: format(end) };
-  };
 
   // Sync month/year picker → date range
   useEffect(() => {
     const { from, to } = getMonthStartEnd(selectedYear, selectedMonth);
     setFromDate(from);
     setToDate(to);
-    setCurrentPage(0); // Reset to first page (API is 0-based)
-  }, [selectedYear, selectedMonth]);
-
-  // Reset page when manual date inputs change (if you add them later)
-  useEffect(() => {
     setCurrentPage(0);
-  }, [fromDate, toDate]);
+  }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -121,7 +115,6 @@ export default function EmployeeDetailsPage() {
   const handleDelete = async (shiftId: string) => {
     if (!confirm('Delete this shift?')) return;
     try {
-      // TODO: implement delete API call and refetch
       alert('Delete not implemented yet');
     } catch (err) {
       alert('Failed to delete');
