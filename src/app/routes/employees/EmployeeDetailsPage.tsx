@@ -10,7 +10,7 @@ import type { Employee } from '@/types/employee.types';
 import type { WeeklySchedule, WeekDayKey } from '@/types/schedule.types';
 import { getShiftsByUserId } from '@/api/shiftApi';
 import { ShiftResponse } from '@/types/shift.types';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 
 
 const leftColumnDays: WeekDayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday'];
@@ -256,7 +256,7 @@ export default function EmployeeDetailsPage() {
                   </th>
                 ))}
                 <th className="px-6 py-4 text-right font-semibold text-sky-800">
-                  Actions
+                  Working Hours
                 </th>
               </tr>
             </thead>
@@ -285,13 +285,9 @@ export default function EmployeeDetailsPage() {
                     <td className="px-6 py-5">
                       <p className="font-medium text-gray-900">{format(new Date(`${res.endTime}`), 'h:mm a')}</p>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                      <button
-                        onClick={() => handleDelete(res.id)}
-                        className="text-red-600 hover:bg-red-50 p-3 rounded-lg transition"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                    <td className="px-6 py-5 text-center">
+                          {(differenceInMinutes(new Date(res.endTime), new Date(res.startTime)) / 60).toFixed(2)} hrs
+
                     </td>
                   </tr>
                 ))
