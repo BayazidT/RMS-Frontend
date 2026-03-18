@@ -177,9 +177,9 @@ export default function EmployeesPage() {
                     <tr>
                       {[
                         { key: 'emlpoyeeId', label: 'Employee ID' },
-                        { key: 'username', label: 'Username' },
                         { key: 'name', label: 'Name' },
                         { key: 'email', label: 'Email' },
+                        { key: 'phone', label: 'Phone' },
                       ].map(col => (
                         <th
                           key={col.key}
@@ -211,14 +211,15 @@ export default function EmployeesPage() {
                           <td className="px-6 py-5">
                           <p className="font-medium text-gray-900">{id_prefix+random_number++}</p>
                           </td>
-                          <td className="px-6 py-5">
-                          <p className="font-medium text-gray-900">{res.username}</p>
-                          </td>
+                        
                           <td className="px-6 py-5">
                               <p className="font-medium text-gray-900">{res.name}</p>
                           </td>
                           <td className="px-6 py-5">
                           <p className="font-medium text-gray-900">{res.email}</p>
+                          </td>
+                          <td className="px-6 py-5">
+                          <p className="font-medium text-gray-900">{res.phone}</p>
                           </td>
                           <td className="px-6 py-5 text-right flex justify-end gap-2">
                             <button

@@ -112,7 +112,7 @@ export default function ShiftPage(){
             alert('Failed to delete');
           }
         };
-    var random_number=0;
+    var random_number=1;
     
       if (loading) {
         return <div className="p-8 text-center">Loading Shift...</div>;
@@ -308,10 +308,10 @@ export default function ShiftPage(){
                             </td>
                           </tr>
                         ) : (
-                            shifts.map((res) => (
+                            shifts.map((res, index) => (
                             <tr key={res.id} className="border-b hover:bg-sky-50 transition">
                               <td className="px-6 py-5">
-                              <p className="font-medium text-gray-900">{random_number++}</p>
+                              <p className="font-medium text-gray-900">{index + 1}</p>
                               </td>
                               <td className="px-6 py-5">
                               <p className="font-medium text-gray-900">{res.name}</p>

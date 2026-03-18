@@ -6,6 +6,7 @@ export interface Employee {
   username: string;
   name: number;
   email: string; 
+  phone: string;
 }
 
 export interface EmployeePage {
