@@ -22,6 +22,7 @@ export default function EmployeesPage() {
     name: '',
     username: '',
     email: '',
+    phone: '',
     roleId: '',
   });
 
@@ -60,6 +61,7 @@ export default function EmployeesPage() {
         name: '',
         username: '',
         email: '',
+        phone: '',
         roleId: '',
       });
       fetchEmployees(); // Refresh list
@@ -132,6 +134,13 @@ export default function EmployeesPage() {
               placeholder="Email (optional)"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="px-4 py-2 border rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Phone (optional)"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="px-4 py-2 border rounded-lg"
             />
              <select
