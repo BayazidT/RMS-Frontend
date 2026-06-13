@@ -41,7 +41,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-sky-600 rounded-full mb-6 shadow-lg">
             <Package className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900">Eiscafe San Marco</h1>
+          <h1 className="text-4xl font-bold text-gray-900">TRestaurant</h1>
           <p className="mt-2 text-lg text-gray-600">Management System</p>
         </div>
 

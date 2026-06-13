@@ -46,7 +46,7 @@ export default function Sidebar({ open, setOpen }: SidebarProps) {
         <div className="p-6 border-b border-sky-600 flex items-center justify-between">
 
           <div>
-            <h2 className="text-xl font-bold">Eiscafe San Marco</h2>
+            <h2 className="text-xl font-bold">TRestaurant</h2>
             <p className="text-sky-200 text-sm">Management</p>
           </div>
 
